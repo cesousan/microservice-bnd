@@ -1,0 +1,89 @@
+version: '3.7'
+
+services:
+  # GATEWAY
+  express_gateway:
+    image: express-gateway
+    container_name: eg_docker
+    ports:
+      - '8080:8080'
+    volumes:
+      - ./gateway/env/secret.txt:/env/secret.txt
+      - ./gateway/docker/system.config.yml:/var/lib/eg/system.config.yml
+      - ./gateway/docker/gateway.config.yml:/var/lib/eg/gateway.config.yml
+    networks:
+      - gateway
+
+  # FILE TRANSFER
+  file_transfer:
+    container_name: file_transfer
+    build:
+      context: file-transfer/
+      target: development
+    env_file:
+      - file-transfer/env/docker.env
+    ports:
+      # ${FILE_TRANSFER_SERVER_PORT_DOCKER} is defined in root .env file and
+      # is the same as ${SERVER_PORT} defined in docker.env
+      - ${FILE_TRANSFER_SERVER_PORT_DOCKER}:${FILE_TRANSFER_SERVER_PORT_DOCKER}
+      - 9229:9229
+    command: npm run start:dev
+    networks:
+      - file_transfer_net
+      - gateway
+    depends_on:
+      - redis
+      - minio
+    volumes:
+      - ./file-transfer:/usr/src/app
+      - /usr/src/app/node_modules
+
+  redis:
+    container_name: redis
+    image: redis:alpine
+    env_file:
+      - file-transfer/env/docker.env
+    ports:
+      - ${FILE_TRANSFER_REDIS_PORT}
+    volumes:
+      - ./file-transfer/volumes/redis/data:/data
+    networks:
+      - file_transfer_net
+
+  minio:
+    container_name: minio
+    image: minio/minio
+    env_file:
+      - file-transfer/env/docker.env
+    command: server /data/minio
+    ports:
+      - ${FILE_TRANSFER_MINIO_PORT}:${FILE_TRANSFER_MINIO_PORT}
+    volumes:
+      - ./file-transfer/volumes/minio/data:/minio/data
+    networks:
+      - file_transfer_net
+
+  # AUTHENTICATION SERVER
+  auth:
+    container_name: auth
+    build:
+      context: ./auth
+      target: development
+    env_file:
+      - auth/.env
+    ports:
+      # ${AUTH_SERVER_PORT_DOCKER} is defined in root .env file
+      - ${AUTH_SERVER_PORT_DOCKER}:${AUTH_SERVER_PORT_DOCKER}
+      # - 9229:9229
+    command: npm run start:dev
+    networks:
+      - auth_net
+      - gateway
+    volumes:
+      - ./auth:/usr/src/app
+      - /usr/src/app/node_modules
+
+networks:
+  gateway:
+  file_transfer_net:
+  auth_net:

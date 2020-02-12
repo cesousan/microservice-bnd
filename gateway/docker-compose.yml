@@ -1,0 +1,17 @@
+version: '3.7'
+
+services:
+  express_gateway:
+    image: express-gateway
+    container_name: eg_docker
+    ports:
+      - '8080:8080'
+    volumes:
+      - ./env/secret.txt:/env/secret.txt
+      - ./config/system.config.yml:/var/lib/eg/system.config.yml
+      - ./config/gateway.config.yml:/var/lib/eg/gateway.config.yml
+    networks:
+      - gateway
+
+networks:
+  gateway:

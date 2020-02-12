@@ -1,0 +1,85 @@
+http:
+  port: 8080
+apiEndpoints:
+  entryPoint:
+    path: '/'
+  auth:
+    path: '/auth*'
+    methods: ['POST', 'OPTIONS']
+  file_loader:
+    path: /files*
+serviceEndpoints:
+  auth:
+    url: 'http://auth:4000'
+  file_loader:
+    url: 'http://file_transfer:3010'
+policies:
+  - log
+  - proxy
+  - jwt
+  - cors
+  - request-transformer
+  - expression
+  - rate-limit
+pipelines:
+  default:
+    apiEndpoints:
+      - entryPoint
+    policies:
+      - log:
+          action:
+            message: 'gateway reached'
+      - cors:
+      - expression:
+          action:
+            jscode: >
+              res.status(200).send('Gateway Reached');
+  authPipeline:
+    apiEndpoints:
+      - auth
+    policies:
+      - log:
+          action:
+            message: 'auth ${req.method}'
+      - cors:
+      - rate-limit:
+          action:
+            max: 1
+            windowMs: 1000
+      - proxy:
+          action:
+            serviceEndpoint: auth
+
+  fileLoaderPipeline:
+    apiEndpoints:
+      - file_loader
+    policies:
+      - log:
+          action:
+            message: 'files loader ${req.method}'
+      - cors:
+          # action:
+          #   origin: 'http://localhost:4200' # TODO: restrict origins
+      - rate-limit:
+          action:
+            max: 1
+            windowMs: 100
+      - jwt:
+          - condition:
+              name: not
+              condition:
+                name: method
+                methods:
+                  - OPTIONS
+            action:
+              secretOrPublicKeyFile: ./env/secret.txt
+              checkCredentialExistence: false
+      # - request-transformer:
+      #     action:
+      #       body:
+      #         add:
+      #           user: req.user
+      - proxy:
+          action:
+            serviceEndpoint: file_loader
+            changeOrigin: true

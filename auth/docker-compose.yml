@@ -1,0 +1,22 @@
+version: '3.7'
+services:
+  auth:
+    container_name: auth
+    build:
+      context: .
+      target: development
+    env_file:
+      - .env
+    ports:
+      # ${SERVER_PORT_DOCKER} is defined in root .env file and
+      # is the same as ${SERVER_PORT} defined in docker.env
+      - ${SERVER_PORT_DOCKER}:${SERVER_PORT_DOCKER}
+      # - 9229:9229
+    command: npm run start:dev
+    networks:
+      - auth_net
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
+networks:
+  auth_net:

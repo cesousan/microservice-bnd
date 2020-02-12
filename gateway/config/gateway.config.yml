@@ -1,0 +1,73 @@
+http:
+  port: 8080
+apiEndpoints:
+  entryPoint:
+    path: '/'
+  auth:
+    path: '/auth*'
+    methods: ['POST']
+  file_loader:
+    path: /files*
+serviceEndpoints:
+  auth:
+    url: 'http://localhost:4000'
+  file_loader:
+    url: 'http://localhost:3010'
+policies:
+  - log
+  - proxy
+  - jwt
+  - request-transformer
+  - expression
+  - rate-limit
+pipelines:
+  default:
+    apiEndpoints:
+      - entryPoint
+    policies:
+      - log:
+          action:
+            message: 'gateway reached'
+      - expression:
+          action:
+            jscode: >
+              res.status(200).send('Gateway Reached');
+  authPipeline:
+    apiEndpoints:
+      - auth
+    policies:
+      - log:
+          action:
+            message: 'auth ${req.method}'
+      - rate-limit:
+          action:
+            max: 1
+            windowMs: 1000
+      - proxy:
+          action:
+            serviceEndpoint: auth
+
+  fileLoaderPipeline:
+    apiEndpoints:
+      - file_loader
+    policies:
+      - log:
+          action:
+            message: 'files loader ${req.method}'
+      - rate-limit:
+          action:
+            max: 1
+            windowMs: 100
+      - jwt:
+          action:
+            secretOrPublicKeyFile: ./env/secret.txt
+            checkCredentialExistence: false
+      - request-transformer:
+          action:
+            body:
+              add:
+                user: req.user
+      - proxy:
+          action:
+            serviceEndpoint: file_loader
+            changeOrigin: true
