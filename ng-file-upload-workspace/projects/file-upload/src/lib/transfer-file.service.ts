@@ -50,11 +50,9 @@ export class TransferFileService {
     const formData = new FormData();
 
     formData.append('file', file, file.name);
-
     const options = {
       headers: new HttpHeaders({
-        'Content-Type': file.type,
-        // 'Content-Disposition': 'form-data',
+        'Content-Type': 'multipart/form-data',
       }),
       reportProgress: true,
       observe: 'events',

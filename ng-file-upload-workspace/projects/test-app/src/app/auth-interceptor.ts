@@ -27,6 +27,11 @@ export class AuthInterceptor implements HttpInterceptor {
         headers: req.headers.set('Content-Type', 'application/json'),
       });
     }
+    if (req.headers.get('Content-Type') === 'multipart/form-data') {
+      req = req.clone({
+        headers: req.headers.delete('Content-Type'),
+      });
+    }
     req = this.addAuthenticationToken(req);
 
     return next.handle(req).pipe(
@@ -72,7 +77,6 @@ export class AuthInterceptor implements HttpInterceptor {
     // If we do not have a token yet then we should not set the header.
     // Here we could first retrieve the token from where we store it.
     this.token = getTokenFromLocalStorage();
-    console.log(this.token);
     if (!this.token) {
       return request;
     }

@@ -63,22 +63,28 @@ pipelines:
       - rate-limit:
           action:
             max: 1
-            windowMs: 100
+            windowMs: 10
       - jwt:
-          - condition:
-              name: not
-              condition:
-                name: method
-                methods:
-                  - OPTIONS
-            action:
-              secretOrPublicKeyFile: ./env/secret.txt
-              checkCredentialExistence: false
-      # - request-transformer:
-      #     action:
-      #       body:
-      #         add:
-      #           user: req.user
+          condition:
+            name: not
+            condition:
+              name: pathMatch
+              pattern: '/stream'
+          #     condition:
+          #       name: oneOf
+          #       conditions:
+          #         - name: not
+          #           condition:
+          #             name: method
+          #             methods:
+          #               - OPTIONS
+          #         - name: not
+          #           condition:
+          #             name: pathExact
+          #             path: /stream/:destination/:id
+          action:
+            secretOrPublicKeyFile: ./env/secret.txt
+            checkCredentialExistence: false
       - proxy:
           action:
             serviceEndpoint: file_loader
