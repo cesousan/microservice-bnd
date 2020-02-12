@@ -1,3 +1,4 @@
 node_modules/
-env/
+#.env
+# *.env TODO: decoment when real values are stored in env
 .yo-rc.json

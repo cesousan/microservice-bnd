@@ -1,0 +1,19 @@
+<lib-file-uploader
+  [fileDestination]="fileDestination$"
+  [ownerId]="ownerId$"
+  (uploadedFile)="uploadedFile($event)"
+>
+  <div *ngIf="file$ | async as file; else noImg">
+    <ng-container *ngIf="file.src; else noImg">
+      <img src="{{ file.src }}" />
+    </ng-container>
+  </div>
+</lib-file-uploader>
+
+<div *ngFor="let f of files$ | async">
+  <div>name: {{ f.name }} ({{ f.size }} octets)</div>
+</div>
+
+<ng-template #noImg>
+  <h1>BLARF</h1>
+</ng-template>

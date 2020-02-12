@@ -1,6 +1,8 @@
 # See http://help.github.com/ignore-files/ for more about ignoring files.
 
-projects/test-app
+# projects/test-app TODO: decoment when not experimenting anymore.
+#.env
+# *.env TODO: decoment when real values are stored in env
 
 # compiled output
 /dist
