@@ -1,0 +1,5 @@
+{
+  "vsicons.presets.nestjs": true,
+  "python.pythonPath": "/usr/bin/python3.8",
+  "editor.formatOnSave": false
+}
