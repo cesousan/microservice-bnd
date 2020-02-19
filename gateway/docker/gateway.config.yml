@@ -8,11 +8,15 @@ apiEndpoints:
     methods: ['POST', 'OPTIONS']
   file_loader:
     path: /files*
+  users:
+    path: /user*
 serviceEndpoints:
   auth:
     url: 'http://auth:4000'
   file_loader:
     url: 'http://file_transfer:3010'
+  users:
+    url: 'http://users_api:5000'
 policies:
   - log
   - proxy
@@ -88,4 +92,40 @@ pipelines:
       - proxy:
           action:
             serviceEndpoint: file_loader
+            changeOrigin: true
+
+  usersPipeline:
+    apiEndpoints:
+      - users
+    policies:
+      - log:
+          action:
+            message: 'users api ${req.method}'
+      - cors:
+          # action:
+          #   origin: 'http://localhost:4200' # TODO: restrict origins
+      - rate-limit:
+          action:
+            max: 1
+            windowMs: 10
+      - jwt:
+          condition:
+            name: allOf
+            conditions:
+              - name: not
+                condition:
+                  name: method
+                  methods:
+                    - OPTIONS
+                    - POST
+              - name: not
+                condition:
+                  name: pathExact
+                  path: /user
+          action:
+            secretOrPublicKeyFile: ./env/secret.txt
+            checkCredentialExistence: false
+      - proxy:
+          action:
+            serviceEndpoint: users
             changeOrigin: true

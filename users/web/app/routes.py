@@ -11,7 +11,7 @@ def index():
     return "\n* * *\n* Y *\n* O *\n* L *\n* O *\n* * *\n"
 
 @app.route("/user", methods=['POST'])
-def user_details():
+def create_user():
     data = request.get_json()
     if data['full_name'] and data['email'] and data['location']:
         existing_user = User.query.filter_by(email=data['email']).first()
@@ -40,6 +40,25 @@ def user_details():
         }
     return jsonify(response), 400
 
+@app.route("/user", methods=['GET'])
+def get_users():
+    users = User.query.order_by(User.id).all()
+    if users is None or users == []:
+        response = {
+            'message': 'no users in the database'
+        }
+        return jsonify(response), 202
+    
+    print(users)
+    result = user_schema.dumps(users, many=True)
+    print(result)
+
+    response = {
+        'data': result,
+        'status_code': 202
+    }
+    return jsonify(response)
+
 
 @app.route("/user/<user_id>", methods=['GET'])
 def get_user_details(user_id):
@@ -49,7 +68,8 @@ def get_user_details(user_id):
             'message': 'user does not exist'
         }
         return jsonify(response), 404
-    result = user_schema.dumps(user).data
+
+    result = user_schema.dumps(user)
     response = {
         'data': result,
         'status_code': 202
