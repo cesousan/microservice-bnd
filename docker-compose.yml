@@ -1,4 +1,4 @@
-version: '3.7'
+version: "3.7"
 
 services:
   # GATEWAY
@@ -6,7 +6,7 @@ services:
     image: express-gateway
     container_name: eg_docker
     ports:
-      - '8080:8080'
+      - "8080:8080"
     volumes:
       - ./gateway/env/secret.txt:/env/secret.txt
       - ./gateway/docker/system.config.yml:/var/lib/eg/system.config.yml
@@ -77,13 +77,29 @@ services:
       # - 9229:9229
     command: npm run start:dev
     networks:
-      - auth_net
+      - users_net
       - gateway
     volumes:
       - ./auth:/usr/src/app
+      - /usr/src/app/node_modules
+  # USERS SERVER
+  users:
+    container_name: users
+    build:
+      context: ./users-js
+      target: development
+    env_file:
+      - users-js/.env
+    expose:
+      - ${USERS_SERVER_PORT_DOCKER}
+    command: npm run start:dev
+    networks:
+      - users_net
+    volumes:
+      - ./users-js:/usr/src/app
       - /usr/src/app/node_modules
 
 networks:
   gateway:
   file_transfer_net:
-  auth_net:
+  users_net:
