@@ -1,5 +1,5 @@
 import { Observable, of } from 'rxjs';
-import { pluck } from 'rxjs/operators';
+import { pluck, map, tap } from 'rxjs/operators';
 import { AxiosResponse } from 'axios';
 
 import { Injectable, HttpService, Logger } from '@nestjs/common';
@@ -18,6 +18,7 @@ export class UsersService {
   ) {
     this.logger = new Logger('UsersService');
     this.usersAPIUrl = this.getUsersAPIBaseUrl(this.config.get('usersAPI'));
+    this.logger.log(this.usersAPIUrl);
   }
 
   findAll(): Observable<User[]> {
@@ -28,11 +29,14 @@ export class UsersService {
     return of(null);
   }
 
-  findOne(username: string): Observable<User> {
+  findByUsername(username: string): Observable<User> {
     if (this.usersAPIUrl) {
-      return this.http
-        .get<User>(`${this.usersAPIUrl}/${username}`)
-        .pipe(pluck('data'));
+      const url = `${this.usersAPIUrl}/name/${username}`;
+      return this.http.get<any>(url).pipe(
+        pluck('data', 'data'),
+        tap(data => typeof data === 'string'),
+        map(user => JSON.parse(user)),
+      );
     }
     this.logger.error('users API url is not defined');
     return of(null);

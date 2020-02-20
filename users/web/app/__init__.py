@@ -1,20 +1,15 @@
+from app.config import Config, Configdb
+
 from flask import Flask, jsonify
 from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
+from flask_marshmallow import Marshmallow
 
 app = Flask(__name__)
-app.config.from_object("app.config.Config")
+app.config.from_object(Config)
+app.config.from_object(Configdb)
 db = SQLAlchemy(app)
+ma = Marshmallow(app)
+migrate = Migrate(app, db)
 
-class User(db.Model):
-    __tablename__ = "users"
-
-    id = db.Column(db.Integer, primary_key=True)
-    email = db.Column(db.String(128), unique=True, nullable=False)
-    active = db.Column(db.Boolean(), default=True, nullable=False)
-
-    def __init__(self, email):
-        self.email = email
-
-@app.route("/")
-def hello_world():
-  return jsonify(hello="world")
+from app import routes, models

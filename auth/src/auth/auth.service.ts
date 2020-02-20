@@ -13,16 +13,18 @@ export class AuthService {
   ) {}
 
   validateUser(username: string, pass: string): Observable<any> {
-    console.log('VALIDATE USER');
-    return this.usersService.findOne(username).pipe(
+    return this.usersService.findByUsername(username).pipe(
       map(user => {
+        if (!user) {
+          throw new Error('Blarf');
+        }
         if (user && user.password === pass) {
+          console.log(user);
           const { password, ...result } = user;
           return result;
         }
         return null;
       }),
-      tap(console.log),
     );
   }
 

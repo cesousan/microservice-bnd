@@ -82,22 +82,56 @@ services:
     volumes:
       - ./auth:/usr/src/app
       - /usr/src/app/node_modules
+  # # USERS SERVER
+  # users:
+  #   container_name: users
+  #   build:
+  #     context: ./users-js
+  #     target: development
+  #   env_file:
+  #     - users-js/.env
+  #   expose:
+  #     - ${USERS_SERVER_PORT_DOCKER}
+  #   command: npm run start:dev
+  #   networks:
+  #     - users_net
+  #   volumes:
+  #     - ./users-js:/usr/src/app
+  #     - /usr/src/app/node_modules
+
   # USERS SERVER
   users:
     container_name: users
-    build:
-      context: ./users-js
-      target: development
+    build: ./users/web
+    command: python manage.py run -h 0.0.0.0
+    ports:
+      - 5000:5000
     env_file:
-      - users-js/.env
-    expose:
-      - ${USERS_SERVER_PORT_DOCKER}
-    command: npm run start:dev
+      - ./users/.env.dev
+    volumes:
+      - ./users/web/:/usr/src/app/
+    depends_on:
+      - users_db
+    networks:
+      - gateway
+      - users_net
+
+  users_db:
+    container_name: users_db
+    image: postgres:12.0-alpine
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    environment:
+      - POSTGRES_USER=hello_flask
+      - POSTGRES_PASSWORD=hello_flask
+      - POSTGRES_DB=hello_flask_dev
     networks:
       - users_net
-    volumes:
-      - ./users-js:/usr/src/app
-      - /usr/src/app/node_modules
+
+
+
+volumes:
+  postgres_data:
 
 networks:
   gateway:

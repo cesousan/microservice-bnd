@@ -15,7 +15,6 @@ export class LocalStrategy extends PassportStrategy(Strategy) {
 
   validate(username: string, password: string): Observable<any> {
     return this.authService.validateUser(username, password).pipe(
-      tap(user => console.log('validate?', user)),
       map(user => {
         if (!user) {
           throw new UnauthorizedException();

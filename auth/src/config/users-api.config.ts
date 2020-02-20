@@ -6,7 +6,7 @@ export default (): { usersAPI: UsersAPIConfig } => ({
       port: parseInt(process.env.USERS_API_PORT, 10) || 6000,
     },
     endpoints: {
-      base: 'users',
+      base: 'user',
     },
   },
 });
