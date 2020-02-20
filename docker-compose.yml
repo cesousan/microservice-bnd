@@ -1,12 +1,12 @@
-version: "3.7"
+version: '3.7'
 
 services:
   # GATEWAY
   express_gateway:
+    container_name: express_gateway
     image: express-gateway
-    container_name: eg_docker
     ports:
-      - "8080:8080"
+      - '8080:8080'
     volumes:
       - ./gateway/env/secret.txt:/env/secret.txt
       - ./gateway/docker/system.config.yml:/var/lib/eg/system.config.yml
@@ -22,11 +22,14 @@ services:
       target: development
     env_file:
       - file-transfer/env/docker.env
-    ports:
-      # ${FILE_TRANSFER_SERVER_PORT_DOCKER} is defined in root .env file and
-      # is the same as ${SERVER_PORT} defined in docker.env
-      - ${FILE_TRANSFER_SERVER_PORT_DOCKER}:${FILE_TRANSFER_SERVER_PORT_DOCKER}
-      - 9229:9229
+    # ports:
+    #   # ${FILE_TRANSFER_SERVER_PORT_DOCKER} is defined in root .env file and
+    #   # is the same as ${SERVER_PORT} defined in docker.env
+    #   - ${FILE_TRANSFER_SERVER_PORT_DOCKER}:${FILE_TRANSFER_SERVER_PORT_DOCKER}
+    #   - 9229:9229
+    expose:
+      - ${FILE_TRANSFER_SERVER_PORT_DOCKER}
+      # - 9229
     command: npm run start:dev
     networks:
       - file_transfer_net
@@ -43,7 +46,9 @@ services:
     image: redis:alpine
     env_file:
       - file-transfer/env/docker.env
-    ports:
+    # ports:
+    #   - ${FILE_TRANSFER_REDIS_PORT}
+    expose:
       - ${FILE_TRANSFER_REDIS_PORT}
     volumes:
       - ./file-transfer/volumes/redis/data:/data
@@ -56,8 +61,10 @@ services:
     env_file:
       - file-transfer/env/docker.env
     command: server /data/minio
-    ports:
-      - ${FILE_TRANSFER_MINIO_PORT}:${FILE_TRANSFER_MINIO_PORT}
+    # ports:
+    #   - ${FILE_TRANSFER_MINIO_PORT}:${FILE_TRANSFER_MINIO_PORT}
+    expose:
+      - ${FILE_TRANSFER_MINIO_PORT}
     volumes:
       - ./file-transfer/volumes/minio/data:/minio/data
     networks:
@@ -71,10 +78,12 @@ services:
       target: development
     env_file:
       - auth/.env
-    ports:
-      # ${AUTH_SERVER_PORT_DOCKER} is defined in root .env file
-      - ${AUTH_SERVER_PORT_DOCKER}:${AUTH_SERVER_PORT_DOCKER}
-      # - 9229:9229
+    # ports:
+    #   # ${AUTH_SERVER_PORT_DOCKER} is defined in root .env file
+    #   - ${AUTH_SERVER_PORT_DOCKER}:${AUTH_SERVER_PORT_DOCKER}
+    #   # - 9229:9229
+    expose:
+      - ${AUTH_SERVER_PORT_DOCKER}
     command: npm run start:dev
     networks:
       - users_net
@@ -104,8 +113,10 @@ services:
     container_name: users
     build: ./users/web
     command: python manage.py run -h 0.0.0.0
-    ports:
-      - 5000:5000
+    # ports:
+    #   - 5000:5000
+    expose:
+      - ${USERS_SERVER_PORT_DOCKER}
     env_file:
       - ./users/.env.dev
     volumes:
@@ -127,8 +138,6 @@ services:
       - POSTGRES_DB=hello_flask_dev
     networks:
       - users_net
-
-
 
 volumes:
   postgres_data:
